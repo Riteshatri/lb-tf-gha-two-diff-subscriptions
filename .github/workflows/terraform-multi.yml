@@ -131,12 +131,12 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID_B }} # optionally, if your federated cred requires app id
           # audience: api://AzureADTokenExchange # optionally if your federated cred requires audience
 
-      - name: Debug - show az account context
-        run: |
-          az account show
+      # - name: Debug - show az account context
+      #   run: |
+      #     az account show
       
-      - name: Terraform Init
-        run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
+      # - name: Terraform Init
+      #   run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
 
 
 ###########
