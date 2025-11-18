@@ -112,8 +112,9 @@ jobs:
   # 2️⃣ PLAN
   plan:
     name: Terraform Plan
-    needs: [init]
-    if: ${{ inputs.runPlan && (needs.init.result == 'success' || !inputs.runInit) }}
+    # needs: [init]
+    # if: ${{ inputs.runPlan && (needs.init.result == 'success' || !inputs.runInit) }}
+    if: ${{ inputs.runPlan }}
     runs-on: self-hosted
     environment: ${{ inputs.useEnvironmentPlan && inputs.environment || '' }}
     defaults:
@@ -128,7 +129,7 @@ jobs:
         with:
           tenant-id: ${{ secrets.AZURE_TENANT_ID_B }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
-          # client-id: ${{ secrets.AZURE_CLIENT_ID_B }}   # optional if needed for federated cred
+          client-id: ${{ secrets.AZURE_CLIENT_ID_B }}   # optional if needed for federated cred
           audience: api://AzureADTokenExchange
 
       - name: Terraform Init
@@ -141,7 +142,7 @@ jobs:
         with:
           tenant-id: ${{ secrets.AZURE_TENANT_ID_R }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
-          # client-id: ${{ secrets.AZURE_CLIENT_ID_R }}   # optional
+          client-id: ${{ secrets.AZURE_CLIENT_ID_R }}   # optional
 
       - name: Terraform Plan
         run: terraform plan -var-file="../environments/${{ inputs.environment }}.tfvars" -out="tf-plan-${{ inputs.environment }}.tfplan"
