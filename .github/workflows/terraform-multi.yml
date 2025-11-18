@@ -230,40 +230,60 @@ jobs:
 #           name: tf-plan-${{ inputs.environment }}.tfplan
 #           path: infra/tf-plan-${{ inputs.environment }}.tfplan
 
-  # # 3️⃣ APPLY
-  # apply:
-  #   needs: [plan]
-  #   if: ${{ inputs.runApply && needs.plan.result == 'success' }}
-  #   runs-on: self-hosted
-  #   environment: ${{ inputs.useEnvironmentApply && inputs.environment || '' }}
-  #   defaults:
-  #     run:
-  #       working-directory: ${{ env.WORKDIR }}
-  #   steps:
-  #     - uses: actions/checkout@v4
+  # 3️⃣ APPLY
+  apply:
+    needs: [plan]
+    if: ${{ inputs.runApply && needs.plan.result == 'success' }}
+    runs-on: self-hosted
+    environment: ${{ inputs.useEnvironmentApply && inputs.environment || '' }}
+    defaults:
+      run:
+        working-directory: ${{ env.WORKDIR }}
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: azure/login@v2
-  #       with:
-  #         client-id: ${{ secrets.CLIENT_ID_SUBSCRIPTION_BACKEND }}
-  #         tenant-id: ${{ secrets.TENANT_ID_SUBSCRIPTION_BACKEND }}
-  #         # apply should use the same subscription as plan (use plan_subscription if given)
-  #         subscription-id: ${{ secrets.SUBSCRIPTION_ID_BACKEND }}
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.CLIENT_ID_SUBSCRIPTION_BACKEND }}
+          tenant-id: ${{ secrets.TENANT_ID_SUBSCRIPTION_BACKEND }}
+          # apply should use the same subscription as plan (use plan_subscription if given)
+          subscription-id: ${{ secrets.SUBSCRIPTION_ID_BACKEND }}
 
-  #     - name: Download plan
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: tf-plan-${{ inputs.environment }}.tfplan
-  #         path: infra
+      - name: Download plan
+        uses: actions/download-artifact@v4
+        with:
+          name: tf-plan-${{ inputs.environment }}.tfplan
+          path: infra
 
-  #     - name: Terraform Init
-  #       run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
+      - name: Terraform Init
+        run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
 
-  #     - name: Terraform Apply
-  #       env:
-  #         ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #         ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  #         ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  #       run: terraform apply -auto-approve "tf-plan-${{ inputs.environment }}.tfplan"
+      - name: Azure Login (resources - Tenant R)
+        uses: azure/login@v2
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID_R }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
+          client-id: ${{ secrets.AZURE_CLIENT_ID_R }}   # optional
+      - name: Terraform Apply
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_R }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID_R }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
+          ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
+        run: terraform apply -auto-approve "tf-plan-${{ inputs.environment }}.tfplan"
+
+
+
+
+
+
+
+
+
+
+
+
+
 
   # # 4️⃣ DESTROY
   # destroy:
