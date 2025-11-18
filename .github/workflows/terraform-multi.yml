@@ -316,9 +316,9 @@ jobs:
       
       - name: Terraform Destroy
         env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_R }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID_R }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
           ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
 
         run: terraform destroy -auto-approve -var-file="../${{ inputs.tfvars_file }}"
