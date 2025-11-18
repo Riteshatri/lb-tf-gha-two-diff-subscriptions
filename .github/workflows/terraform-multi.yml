@@ -128,7 +128,7 @@ jobs:
         with:
           tenant-id: ${{ secrets.AZURE_TENANT_ID_B }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
-          # client-id: ${{ secrets.AZURE_CLIENT_ID_B }} # optionally, if your federated cred requires app id
+          client-id: ${{ secrets.AZURE_CLIENT_ID_B }} # optionally, if your federated cred requires app id
           # audience: api://AzureADTokenExchange # optionally if your federated cred requires audience
 
       - name: Debug - show az account context
