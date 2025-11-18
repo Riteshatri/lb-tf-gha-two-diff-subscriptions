@@ -132,9 +132,6 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID_B }}   # optional if needed for federated cred
           audience: api://AzureADTokenExchange
 
-      - name: Terraform Init
-        run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
-
       - name:
         Debug: check subscription, RG and Storage (PowerShell)
         shell: pwsh
@@ -176,14 +173,16 @@ jobs:
             az storage container show -n $env:SCNAME --account-name $env:SANAME --subscription $env:SUB_B --output none
             Write-Host "CONTAINER FOUND"
           } catch {
-            Write-Host "CONTAINER NOT FOUND (maybe needs creation): $($_.Exception.Message)"
+            Write-Host "STORAGE CONTAINER NOT FOUND: $($_.Exception.Message)"
             exit 1
           }
 
 
 
+      - name: Terraform Init
+        run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
 
-
+        
       # 2) Switch login to resources tenant (Tenant R) for plan
       - name: Azure Login (resources - Tenant R)
         uses: azure/login@v2
