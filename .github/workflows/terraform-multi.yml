@@ -116,61 +116,33 @@ jobs:
     if: ${{ inputs.runPlan && (needs.init.result == 'success' || !inputs.runInit) }}
     runs-on: self-hosted
     environment: ${{ inputs.useEnvironmentPlan && inputs.environment || '' }}
-
     defaults:
       run:
         working-directory: ${{ env.WORKDIR }}
     steps:
       - uses: actions/checkout@v4
 
-      - name: Azure Login (INIT - backend tenant)
+      # 1) Login to backend tenant (Tenant B) so init can access remote state
+      - name: Azure Login (backend - Tenant B)
         uses: azure/login@v2
         with:
           tenant-id: ${{ secrets.AZURE_TENANT_ID_B }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
-          client-id: ${{ secrets.AZURE_CLIENT_ID_B }} # optionally, if your federated cred requires app id
-          # audience: api://AzureADTokenExchange # optionally if your federated cred requires audience
+          # client-id: ${{ secrets.AZURE_CLIENT_ID_B }}   # optional if needed for federated cred
 
-      # - name: Debug - show az account context
-      #   run: |
-      #     az account show
-      
-      # - name: Terraform Init
-      #   run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
+      - name: Terraform Init
+        run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
 
 
-###########
-###########
-###########       Yha per samjho...... 
-###########       wha jab meine with se log in kiya , tab yeh storage account mein gya meri statefile ko dekhne ke liye
-###########       per ab AAYA BHAI ERROR.... OR YEHI SAMAJH NA HAI.... KI JAB YEH PLAN CHALEGA... TO YEH JO STATEFILE KO ACCESS KAREGA
-###########       WOH USI TENANT MEIN CHALEGA JISMEIN HUMNE azure/login@v2  KARWAYA HAI....
-###########       AB YHA DO CASE:- 1. AGAR BACKEND OR RESOURCES SAME TENANT MEIN HAIN, TOH KOI PROBLEM NAHI
-###########                       2. AGAR BACKEND OR RESOURCES ALAG-ALAG TENANT MEIN HAIN, TOH PROBLEM HOGI
-###########       KYUKI JAB HUM PLAN KARNE JAAYENGE, TOH WOHI CONTEXT USE KAREGA JO HUMNE LOGIN KARWAYA HAI NICHE WLE STEP MEIN
-###########       OR WOHI CONTEXT USE KAREGA JO HUMNE LOGIN KARWAYA HAI NICHE WLE STEP MEIN , PER HUMARA BACKEND DUSRE TENANT MEIN HAI
-###########       TABHI HUM BACKEND WALE SE azure/login@v2 , KARWAKAR .... INIT CHALWAKR , FIR PLAN STEP MEIN US-SE ENVIRONMENT LOGIN KARWATE HAI..
-      # - name: Azure Login (PLAN - resources tenant)
-      #   uses: azure/login@v2
-      #   with:
-      #     tenant-id: ${{ secrets.AZURE_TENANT_ID_R }}
-      #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
-      #     client-id: ${{ secrets.AZURE_CLIENT_ID_R }} # optionally, if your federated cred requires app id
-
-      # - name: Debug - show az account
-      #   run: az account show
-
-      # - name: Terraform Plan
-      #   run: terraform plan -var-file="../environments/${{ inputs.environment }}.tfvars" -out="tf-plan-${{ inputs.environment }}.tfplan"
-###########
-###########        TO AB HUM YHA KYA KARANGE ???
-###########        aB HUM YHA PER ENV SE VALUES KO PASS KARWAYANGE.....
+      # 2) Switch login to resources tenant (Tenant R) for plan
+      - name: Azure Login (resources - Tenant R)
+        uses: azure/login@v2
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID_R }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
+          # client-id: ${{ secrets.AZURE_CLIENT_ID_R }}   # optional
 
       - name: Terraform Plan
-        env:
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_R }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID_R }}
-          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
         run: terraform plan -var-file="../environments/${{ inputs.environment }}.tfvars" -out="tf-plan-${{ inputs.environment }}.tfplan"
 
       - name: Upload plan
@@ -178,6 +150,77 @@ jobs:
         with:
           name: tf-plan-${{ inputs.environment }}.tfplan
           path: infra/tf-plan-${{ inputs.environment }}.tfplan
+
+
+
+#   plan:
+#     name: Terraform Plan
+#     needs: [init]
+#     if: ${{ inputs.runPlan && (needs.init.result == 'success' || !inputs.runInit) }}
+#     runs-on: self-hosted
+#     environment: ${{ inputs.useEnvironmentPlan && inputs.environment || '' }}
+
+#     defaults:
+#       run:
+#         working-directory: ${{ env.WORKDIR }}
+#     steps:
+#       - uses: actions/checkout@v4
+
+#       - name: Azure Login (INIT - backend tenant)
+#         uses: azure/login@v2
+#         with:
+#           tenant-id: ${{ secrets.AZURE_TENANT_ID_B }}
+#           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
+#           client-id: ${{ secrets.AZURE_CLIENT_ID_B }} # optionally, if your federated cred requires app id
+#           # audience: api://AzureADTokenExchange # optionally if your federated cred requires audience
+
+#       # - name: Debug - show az account context
+#       #   run: |
+#       #     az account show
+      
+#       # - name: Terraform Init
+#       #   run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
+
+
+# ###########
+# ###########
+# ###########       Yha per samjho...... 
+# ###########       wha jab meine with se log in kiya , tab yeh storage account mein gya meri statefile ko dekhne ke liye
+# ###########       per ab AAYA BHAI ERROR.... OR YEHI SAMAJH NA HAI.... KI JAB YEH PLAN CHALEGA... TO YEH JO STATEFILE KO ACCESS KAREGA
+# ###########       WOH USI TENANT MEIN CHALEGA JISMEIN HUMNE azure/login@v2  KARWAYA HAI....
+# ###########       AB YHA DO CASE:- 1. AGAR BACKEND OR RESOURCES SAME TENANT MEIN HAIN, TOH KOI PROBLEM NAHI
+# ###########                       2. AGAR BACKEND OR RESOURCES ALAG-ALAG TENANT MEIN HAIN, TOH PROBLEM HOGI
+# ###########       KYUKI JAB HUM PLAN KARNE JAAYENGE, TOH WOHI CONTEXT USE KAREGA JO HUMNE LOGIN KARWAYA HAI NICHE WLE STEP MEIN
+# ###########       OR WOHI CONTEXT USE KAREGA JO HUMNE LOGIN KARWAYA HAI NICHE WLE STEP MEIN , PER HUMARA BACKEND DUSRE TENANT MEIN HAI
+# ###########       TABHI HUM BACKEND WALE SE azure/login@v2 , KARWAKAR .... INIT CHALWAKR , FIR PLAN STEP MEIN US-SE ENVIRONMENT LOGIN KARWATE HAI..
+#       # - name: Azure Login (PLAN - resources tenant)
+#       #   uses: azure/login@v2
+#       #   with:
+#       #     tenant-id: ${{ secrets.AZURE_TENANT_ID_R }}
+#       #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
+#       #     client-id: ${{ secrets.AZURE_CLIENT_ID_R }} # optionally, if your federated cred requires app id
+
+#       # - name: Debug - show az account
+#       #   run: az account show
+
+#       # - name: Terraform Plan
+#       #   run: terraform plan -var-file="../environments/${{ inputs.environment }}.tfvars" -out="tf-plan-${{ inputs.environment }}.tfplan"
+# ###########
+# ###########        TO AB HUM YHA KYA KARANGE ???
+# ###########        aB HUM YHA PER ENV SE VALUES KO PASS KARWAYANGE.....
+
+#       - name: Terraform Plan
+#         env:
+#           ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_R }}
+#           ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID_R }}
+#           ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
+#         run: terraform plan -var-file="../environments/${{ inputs.environment }}.tfvars" -out="tf-plan-${{ inputs.environment }}.tfplan"
+
+#       - name: Upload plan
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: tf-plan-${{ inputs.environment }}.tfplan
+#           path: infra/tf-plan-${{ inputs.environment }}.tfplan
 
   # # 3️⃣ APPLY
   # apply:
