@@ -108,6 +108,7 @@ jobs:
         run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
 
       - run: terraform fmt -recursive
+
       - run: terraform validate
 
   # 2️⃣ PLAN
@@ -285,30 +286,32 @@ jobs:
 
 
 
-  # # 4️⃣ DESTROY
-  # destroy:
-  #   if: ${{ inputs.runDestroy }}
-  #   runs-on: self-hosted
-  #   environment: ${{ inputs.useEnvironmentDestroy && inputs.environment || '' }}
-  #   defaults:
-  #     run:
-  #       working-directory: ${{ env.WORKDIR }}
+  # 4️⃣ DESTROY
+  destroy:
+    if: ${{ inputs.runDestroy }}
+    runs-on: self-hosted
+    environment: ${{ inputs.useEnvironmentDestroy && inputs.environment || '' }}
+    defaults:
+      run:
+        working-directory: ${{ env.WORKDIR }}
 
-  #   steps:
-  #     - uses: actions/checkout@v4
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - uses: azure/login@v2
-  #       with:
-  #         client-id: ${{ secrets.CLIENT_ID_SUBSCRIPTION_BACKEND }}
-  #         tenant-id: ${{ secrets.TENANT_ID_SUBSCRIPTION_BACKEND }}
-  #         subscription-id: ${{ secrets.SUBSCRIPTION_ID_BACKEND }}
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_B }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID_B }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
+ 
+      - name: Terraform Init
+        run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
 
-  #     - name: Terraform Init
-  #       run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
+      - name: Terraform Destroy
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
 
-  #     - name: Terraform Destroy
-  #       env:
-  #         ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #         ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  #         ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-  #       run: terraform destroy -auto-approve -var-file="../${{ inputs.tfvars_file }}"
+        run: terraform destroy -auto-approve -var-file="../${{ inputs.tfvars_file }}"
