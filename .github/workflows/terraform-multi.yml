@@ -132,53 +132,6 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID_B }}   # optional if needed for federated cred
           audience: api://AzureADTokenExchange
 
-      - name:
-        Debug: check subscription, RG and Storage (PowerShell)
-        shell: pwsh
-        env:
-          SUB_B: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
-          RGNAME: ${{ inputs.rgname }}
-          SANAME: ${{ inputs.saname }}
-          SCNAME: ${{ inputs.scname }}
-        run: |
-          Write-Host "===== az account show ====="
-          az account show --output table
-
-          Write-Host "Setting subscription explicitly to $env:SUB_B"
-          az account set --subscription $env:SUB_B
-
-          Write-Host "After set:"
-          az account show --query "{name:name,id:id,tenantId:tenantId}" --output json
-
-          Write-Host "Checking Resource Group: $env:RGNAME"
-          try {
-            az group show -n $env:RGNAME --subscription $env:SUB_B --output none
-            Write-Host "RESOURCE GROUP FOUND"
-          } catch {
-            Write-Host "RESOURCE GROUP NOT FOUND: $($_.Exception.Message)"
-            exit 1
-          }
-
-          Write-Host "Checking Storage Account: $env:SANAME in RG $env:RGNAME"
-          try {
-            az storage account show -n $env:SANAME -g $env:RGNAME --subscription $env:SUB_B --output none
-            Write-Host "STORAGE ACCOUNT FOUND"
-          } catch {
-            Write-Host "STORAGE ACCOUNT NOT FOUND: $($_.Exception.Message)"
-            exit 1
-          }
-
-          Write-Host "Checking Container: $env:SCNAME"
-          try {
-            az storage container show -n $env:SCNAME --account-name $env:SANAME --subscription $env:SUB_B --output none
-            Write-Host "CONTAINER FOUND"
-          } catch {
-            Write-Host "STORAGE CONTAINER NOT FOUND: $($_.Exception.Message)"
-            exit 1
-          }
-
-
-
       - name: Terraform Init
         run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
 
