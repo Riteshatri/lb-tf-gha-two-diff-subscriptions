@@ -1,0 +1,90 @@
+name: prod
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "environments/prod.tfvars"
+
+  workflow_dispatch:
+    inputs:
+      use_environment_init:
+        {
+          type: boolean,
+          default: false,
+          description: "Require approval before Init?",
+        }
+      do_init:
+        {
+          type: boolean,
+          default: false,
+          description: "Run terraform init + fmt + validate?",
+        }
+
+      use_environment_plan:
+        {
+          type: boolean,
+          default: false,
+          description: "Require approval before Plan?",
+        }
+      do_plan:
+        { type: boolean, default: false, description: "Run terraform plan?" }
+
+      use_environment_apply:
+        {
+          type: boolean,
+          default: false,
+          description: "Require approval before Apply?",
+        }
+      do_apply:
+        { type: boolean, default: false, description: "Run terraform apply?" }
+
+      use_environment_destroy:
+        {
+          type: boolean,
+          default: false,
+          description: "Require approval before Destroy?",
+        }
+      do_destroy:
+        { type: boolean, default: false, description: "Run terraform destroy?" }
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: prod-tf
+  cancel-in-progress: false
+
+jobs:
+  call:
+    uses: ./.github/workflows/terraform-multi.yml
+    with:
+      environment: prod
+      tfvars_file: environments/prod.tfvars
+      rgname: ritkargv
+      saname: ritkasav
+      scname: ritkascv
+      key: prod.tfstate
+
+      # Run toggles
+      runInit: ${{ github.event_name == 'push' || inputs.do_init == true }}
+      runPlan: ${{ github.event_name == 'push' || inputs.do_plan == true }}
+      runApply: ${{ github.event_name == 'push' || inputs.do_apply == true }}
+      runDestroy: ${{ github.event_name == 'workflow_dispatch' && inputs.do_destroy == true }}
+
+      # Approval toggles
+      useEnvironmentInit: ${{ github.event_name == 'workflow_dispatch' && inputs.use_environment_init == true }}
+      useEnvironmentPlan: ${{ github.event_name == 'workflow_dispatch' && inputs.use_environment_plan == true }}
+      useEnvironmentApply: ${{ github.event_name == 'push' || (github.event_name == 'workflow_dispatch' && inputs.use_environment_apply == true) }}
+      useEnvironmentDestroy: ${{ github.event_name == 'workflow_dispatch' && inputs.use_environment_destroy == true }}
+
+    secrets:
+      AZURE_CLIENT_ID_R: ${{ secrets.CLIENT_ID_SUBSCRIPTION_RESOURCES }}
+      AZURE_TENANT_ID_R: ${{ secrets.TENANT_ID_SUBSCRIPTION_RESOURCES }}
+      AZURE_SUBSCRIPTION_ID_R: ${{ secrets.SUBSCRIPTION_ID_RESOURCES }}
+      
+      AZURE_CLIENT_ID_B: ${{ secrets.CLIENT_ID_SUBSCRIPTION_BACKEND }}
+      AZURE_TENANT_ID_B: ${{ secrets.TENANT_ID_SUBSCRIPTION_BACKEND }}
+      AZURE_SUBSCRIPTION_ID_B: ${{ secrets.SUBSCRIPTION_ID_BACKEND }}
