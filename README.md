@@ -1,4 +1,4 @@
-# 🏗️ Terraform Azure Modular Infrastructure (with for_each)
+# 🏗️ Terraform Azure Modular Infrastructure (with for_each), Multi Environment, Used Two Different Subscriptions,one for INIT and another one for Plan & Apply 
 
 A production-ready **Infrastructure as Code (IaC)** project using **Terraform** to deploy a complete **modular Azure environment**.  
 Built with **for_each** to dynamically create resources like **Resource Groups, VNets, NSGs, NICs, VMs, Bastion, SQL Server, Databases, and Load Balancers**.  
