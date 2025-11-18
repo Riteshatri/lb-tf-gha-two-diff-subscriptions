@@ -165,11 +165,6 @@ jobs:
 ###########
 ###########        TO AB HUM YHA KYA KARANGE ???
 ###########        aB HUM YHA PER ENV SE VALUES KO PASS KARWAYANGE.....
-      - name: Azure Login (PLAN - resources tenant)
-        uses: azure/login@v2
-
-      - name: Debug - show az account
-        run: az account show
 
       - name: Terraform Plan
         env:
