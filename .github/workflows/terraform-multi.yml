@@ -30,6 +30,7 @@ on:
 
       AZURE_SUBSCRIPTION_ID_R: { required: true }
       AZURE_SUBSCRIPTION_ID_B: { required: true }
+
       ARM_ACCESS_KEY:           {required: true }
 
       
@@ -114,9 +115,8 @@ jobs:
   # 2️⃣ PLAN
   plan:
     name: Terraform Plan
-    # needs: [init]
-    # if: ${{ inputs.runPlan && (needs.init.result == 'success' || !inputs.runInit) }}
-    if: ${{ inputs.runPlan }}
+    needs: [init]
+    if: ${{ inputs.runPlan && (needs.init.result == 'success' || !inputs.runInit) }}
     runs-on: self-hosted
     environment: ${{ inputs.useEnvironmentPlan && inputs.environment || '' }}
     defaults:
