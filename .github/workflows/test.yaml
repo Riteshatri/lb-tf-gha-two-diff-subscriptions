@@ -60,6 +60,12 @@ jobs:
       useEnvironmentDestroy: ${{ github.event_name == 'workflow_dispatch' && inputs.use_environment_destroy == true }}
 
     secrets:
-      AZURE_CLIENT_ID:       ${{ secrets.AZURE_CLIENT_ID }}
-      AZURE_TENANT_ID:       ${{ secrets.AZURE_TENANT_ID }}
-      AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      AZURE_CLIENT_ID_R: ${{ secrets.CLIENT_ID_SUBSCRIPTION_RESOURCES }}
+      AZURE_TENANT_ID_R: ${{ secrets.TENANT_ID_SUBSCRIPTION_RESOURCES }}
+      AZURE_SUBSCRIPTION_ID_R: ${{ secrets.SUBSCRIPTION_ID_RESOURCES }}
+
+      AZURE_CLIENT_ID_B: ${{ secrets.CLIENT_ID_SUBSCRIPTION_BACKEND }}
+      AZURE_TENANT_ID_B: ${{ secrets.TENANT_ID_SUBSCRIPTION_BACKEND }}
+      AZURE_SUBSCRIPTION_ID_B: ${{ secrets.SUBSCRIPTION_ID_BACKEND }}
+      
+      ARM_ACCESS_KEY: ${{ secrets.ARM_ACCESS_KEY }}
