@@ -96,19 +96,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # - uses: azure/login@v2
-      #   with:
-      #     client-id: ${{ secrets.AZURE_CLIENT_ID_B }}
-      #     tenant-id: ${{ secrets.AZURE_TENANT_ID_B }}
-      #     # use init_subscription if provided, otherwise fall back to the caller secret
-      #     subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
-      #   # Also expose ARM_SUBSCRIPTION_ID to terraform steps in this job
-
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID_B }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID_B }}
+          # use init_subscription if provided, otherwise fall back to the caller secret
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
+        
       - name: Terraform Init
-        env:
-          ARM_SUBSCRIPTION_ID: ${{secrets.AZURE_SUBSCRIPTION_ID_R }}
-          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_R }}
-          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID_R }}
         run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
 
       - run: terraform fmt -recursive
