@@ -63,9 +63,9 @@ jobs:
     with:
       environment: prod
       tfvars_file: environments/prod.tfvars
-      rgname: ritkargv
-      saname: ritkasav
-      scname: ritkascv
+      rgname: ritkargr
+      saname: ritkasar
+      scname: ritkascr
       key: prod.tfstate
 
       # Run toggles
@@ -84,7 +84,7 @@ jobs:
       AZURE_CLIENT_ID_R: ${{ secrets.CLIENT_ID_SUBSCRIPTION_RESOURCES }}
       AZURE_TENANT_ID_R: ${{ secrets.TENANT_ID_SUBSCRIPTION_RESOURCES }}
       AZURE_SUBSCRIPTION_ID_R: ${{ secrets.SUBSCRIPTION_ID_RESOURCES }}
-      
+
       AZURE_CLIENT_ID_B: ${{ secrets.CLIENT_ID_SUBSCRIPTION_BACKEND }}
       AZURE_TENANT_ID_B: ${{ secrets.TENANT_ID_SUBSCRIPTION_BACKEND }}
       AZURE_SUBSCRIPTION_ID_B: ${{ secrets.SUBSCRIPTION_ID_BACKEND }}
