@@ -30,6 +30,7 @@ on:
 
       AZURE_SUBSCRIPTION_ID_R: { required: true }
       AZURE_SUBSCRIPTION_ID_B: { required: true }
+      ARM_ACCESS_KEY:           {required: true }
 
       
 
