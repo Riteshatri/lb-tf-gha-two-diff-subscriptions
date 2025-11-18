@@ -109,44 +109,57 @@ jobs:
       - run: terraform fmt -recursive
       - run: terraform validate
 
-  # # 2️⃣ PLAN
-  # plan:
-  #   name: Terraform Plan
-  #   needs: [init]
-  #   if: ${{ inputs.runPlan && (needs.init.result == 'success' || !inputs.runInit) }}
-  #   runs-on: self-hosted
-  #   environment: ${{ inputs.useEnvironmentPlan && inputs.environment || '' }}
+  # 2️⃣ PLAN
+  plan:
+    name: Terraform Plan
+    needs: [init]
+    if: ${{ inputs.runPlan && (needs.init.result == 'success' || !inputs.runInit) }}
+    runs-on: self-hosted
+    environment: ${{ inputs.useEnvironmentPlan && inputs.environment || '' }}
 
-  #   defaults:
-  #     run:
-  #       working-directory: ${{ env.WORKDIR }}
-  #   steps:
-  #     - uses: actions/checkout@v4
+    defaults:
+      run:
+        working-directory: ${{ env.WORKDIR }}
+    steps:
+      - uses: actions/checkout@v4
 
-  #     - name: Azure Login
-  #       uses: azure/login@v2
-  #       with:
-  #         client-id: ${{ secrets.CLIENT_ID_SUBSCRIPTION_BACKEND }}
-  #         tenant-id: ${{ secrets.TENANT_ID_SUBSCRIPTION_BACKEND }}
-  #         # use plan_subscription if provided, otherwise fallback to caller secret
-  #         subscription-id: ${{ secrets.SUBSCRIPTION_ID_BACKEND }}
+      - name: Azure Login (INIT - backend tenant)
+        uses: azure/login@v2
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID_B }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_B }}
+          # client-id: ${{ secrets.AZURE_CLIENT_ID_B }} # optionally, if your federated cred requires app id
+          # audience: api://AzureADTokenExchange # optionally if your federated cred requires audience
 
-  #     - name: Terraform Init
-  #       run: terraform init -input=false -backend-config="resource_group_name=${{ inputs.rgname }}" -backend-config="storage_account_name=${{ inputs.saname }}" -backend-config="container_name=${{ inputs.scname }}" -backend-config="key=${{ inputs.key }}"
+      - name: Debug - show az account context
+        run: |
+          az account show
 
-  #     - name: Terraform Plan
-  #       env:
-  #         # export ARM_* to allow terraform to use the subscription from plan_subscription
-  #         ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
-  #         ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
-  #         ARM_SUBSCRIPTION_ID: ${{secrets.AZURE_SUBSCRIPTION_ID }}
-  #       run: terraform plan -var-file="../environments/${{ inputs.environment }}.tfvars" -out="tf-plan-${{ inputs.environment }}.tfplan"
+      - name: Terraform Init
+        run: terraform init -input=false \
+          -backend-config="resource_group_name=${{ inputs.rgname }}" \
+          -backend-config="storage_account_name=${{ inputs.saname }}" \
+          -backend-config="container_name=${{ inputs.scname }}" \
+          -backend-config="key=${{ inputs.key }}"
 
-  #     - name: Upload plan
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: tf-plan-${{ inputs.environment }}.tfplan
-  #         path: infra/tf-plan-${{ inputs.environment }}.tfplan
+      - name: Azure Login (PLAN - resources tenant)
+        uses: azure/login@v2
+        with:
+          tenant-id: ${{ secrets.AZURE_TENANT_ID_R }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
+          # client-id: ${{ secrets.AZURE_CLIENT_ID_R }} # optionally, if your federated cred requires app id
+
+      - name: Debug - show az account
+        run: az account show
+
+      - name: Terraform Plan
+        run: terraform plan -var-file="../environments/${{ inputs.environment }}.tfvars" -out="tf-plan-${{ inputs.environment }}.tfplan"
+
+      - name: Upload plan
+        uses: actions/upload-artifact@v4
+        with:
+          name: tf-plan-${{ inputs.environment }}.tfplan
+          path: infra/tf-plan-${{ inputs.environment }}.tfplan
 
   # # 3️⃣ APPLY
   # apply:
