@@ -145,6 +145,10 @@ jobs:
           client-id: ${{ secrets.AZURE_CLIENT_ID_R }}   # optional
 
       - name: Terraform Plan
+        env:
+          ARM_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID_R }}
+          ARM_TENANT_ID: ${{ secrets.AZURE_TENANT_ID_R }}
+          ARM_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID_R }}
         run: terraform plan -var-file="../environments/${{ inputs.environment }}.tfvars" -out="tf-plan-${{ inputs.environment }}.tfplan"
 
       - name: Upload plan
